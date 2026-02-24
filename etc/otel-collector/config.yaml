@@ -1,0 +1,36 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:14317
+      http:
+        endpoint: 0.0.0.0:14318
+        cors:
+          allowed_origins:
+            - "http://localhost"
+            - "http://localhost:80"
+            - "http://127.0.0.1"
+            - "http://127.0.0.1:80"
+            - "*"
+          allowed_headers:
+            - "*"
+          max_age: 7200
+
+processors:
+  batch:
+
+exporters:
+  debug:
+    verbosity: detailed
+    
+  otlp/jaeger:
+    endpoint: "jaeger:4317"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp/jaeger]

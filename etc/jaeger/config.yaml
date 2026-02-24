@@ -1,0 +1,5 @@
+# Пример конфига для Jaeger all-in-one (обычно не требуется, но можно оставить для совместимости)
+# Jaeger all-in-one использует переменные окружения для OTLP:
+# COLLECTOR_OTLP_ENABLED=true
+# COLLECTOR_OTLP_GRPC_HOST_PORT=:14317
+# COLLECTOR_OTLP_HTTP_HOST_PORT=:14318

@@ -1,0 +1,12 @@
+setuptools==67.8.0
+flask==3.0.3
+requests==2.32.3
+psycopg2-binary==2.9.9
+
+opentelemetry-distro==0.48b0
+opentelemetry-exporter-otlp==1.27.0
+
+opentelemetry-instrumentation==0.48b0
+opentelemetry-instrumentation-flask==0.48b0
+opentelemetry-instrumentation-requests==0.48b0
+opentelemetry-instrumentation-psycopg2==0.48b0

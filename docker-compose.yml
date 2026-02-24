@@ -1,0 +1,109 @@
+name: testautootel
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: otel_demo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  service-a:
+    build: ./service-a
+    environment:
+      PORT: "8001"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: otel_demo
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      NEXT_URL: http://service-b:8002/run
+
+      OTEL_SERVICE_NAME: service-a
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:14317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    ports:
+      - "18001:8001"
+    depends_on:
+      - postgres
+      - otel-collector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  service-b:
+    build: ./service-b
+    environment:
+      PORT: "8002"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: otel_demo
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      NEXT_URL: http://service-c:8003/run
+
+      OTEL_SERVICE_NAME: service-b
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:14317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    ports:
+      - "18002:8002"
+    depends_on:
+      - postgres
+      - otel-collector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  service-c:
+    build: ./service-c
+    environment:
+      PORT: "8003"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: otel_demo
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+
+      OTEL_SERVICE_NAME: service-c
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:14317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    ports:
+      - "18003:8003"
+    depends_on:
+      - postgres
+      - otel-collector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.89.0
+    command: ["--config", "/etc/otel-collector/config.yaml"]
+    volumes:
+      - ./etc/otel-collector/config.yaml:/etc/otel-collector/config.yaml:ro
+    ports:
+      - "14317:14317"
+      - "14318:14318"
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    volumes:
+      - ./etc/jaeger/jaeger-ui.json:/etc/jaeger/jaeger-ui.json
+    command:
+      - --query.ui-config=/etc/jaeger/jaeger-ui.json
+    ports:
+      - "16686:16686"
